@@ -1,0 +1,16 @@
+.tools/
+.idea/
+.DS_Store
+
+**/target/
+**/build/
+**/.classpath
+**/.project
+**/.settings/
+
+sync-ui/node_modules/
+sync-ui/dist/
+
+data/
+work/
+*.log

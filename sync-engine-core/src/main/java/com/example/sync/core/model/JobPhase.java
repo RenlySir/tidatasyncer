@@ -1,0 +1,15 @@
+package com.example.sync.core.model;
+
+public enum JobPhase {
+    CREATED,
+    VALIDATING,
+    EXPORTING_FULL,
+    IMPORTING_FULL,
+    STARTING_INCREMENTAL,
+    BUFFERING_INCREMENTAL,
+    REPLAYING_INCREMENTAL_BUFFER,
+    RUNNING_INCREMENTAL,
+    COMPLETED,
+    FAILED,
+    STOPPED
+}
