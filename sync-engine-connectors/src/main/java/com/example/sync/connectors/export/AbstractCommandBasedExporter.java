@@ -1,7 +1,9 @@
 package com.example.sync.connectors.export;
 
 import com.example.sync.connectors.util.CommandTemplateRenderer;
+import com.example.sync.connectors.util.CsvHeaderMapper;
 import com.example.sync.connectors.util.LightningCsvNaming;
+import com.example.sync.connectors.util.MongoConnectionSupport;
 import com.example.sync.core.config.SourceConnectionProperties;
 import com.example.sync.core.config.SyncJobDefinition;
 import com.example.sync.core.config.TableMapping;
@@ -36,6 +38,7 @@ public abstract class AbstractCommandBasedExporter implements FullLoadExporter {
                     percent,
                     "Exporting table " + mapping.sourceTable()
             );
+            validateMapping(definition, mapping);
             Path rawCsvFile = rawExportFile(exportDir, mapping);
             executeExportCommand(definition, mapping, rawCsvFile);
             rowCount += countRows(rawCsvFile);
@@ -69,8 +72,11 @@ public abstract class AbstractCommandBasedExporter implements FullLoadExporter {
         values.put("username", source.username());
         values.put("password", source.password());
         values.put("jdbcUrl", source.jdbcUrl());
+        values.put("connectionUri", MongoConnectionSupport.resolveConnectionString(source, definition.incremental().additionalProperties()));
         values.put("exportToolBinary", resolveExportBinary(definition, ""));
         values.put("file", csvFile.toAbsolutePath().toString());
+        values.put("fields", String.join(",", mapping.includedColumns() == null ? List.of() : mapping.includedColumns()));
+        values.put("fieldFile", createFieldFile(csvFile.getParent(), mapping).toAbsolutePath().toString());
 
         Process process = new ProcessBuilder("/bin/zsh", "-lc", CommandTemplateRenderer.render(template, values))
                 .redirectErrorStream(true)
@@ -98,9 +104,13 @@ public abstract class AbstractCommandBasedExporter implements FullLoadExporter {
             Path rawCsvFile,
             Path exportDir
     ) throws IOException {
+        CsvHeaderMapper.rewriteHeader(rawCsvFile, mapping.columnMappings());
         Path targetFile = exportDir.resolve(LightningCsvNaming.singleFileName(mapping.targetDatabase(), mapping.targetTable()));
         Files.move(rawCsvFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
         return List.of(targetFile);
+    }
+
+    protected void validateMapping(SyncJobDefinition definition, TableMapping mapping) {
     }
 
     protected String resolveExportBinary(SyncJobDefinition definition, String defaultBinary) {
@@ -109,6 +119,13 @@ public abstract class AbstractCommandBasedExporter implements FullLoadExporter {
             return defaultBinary;
         }
         return configured;
+    }
+
+    protected Path createFieldFile(Path exportDir, TableMapping mapping) throws IOException {
+        Path fieldFile = exportDir.resolve(".fields-" + mapping.targetTable() + ".txt");
+        List<String> fields = mapping.includedColumns() == null ? List.of() : mapping.includedColumns();
+        Files.write(fieldFile, fields);
+        return fieldFile;
     }
 
     protected abstract String defaultCommandTemplate(SyncJobDefinition definition);

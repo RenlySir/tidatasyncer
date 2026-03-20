@@ -5,5 +5,6 @@ public enum SourceDatabaseType {
     ORACLE,
     SQLSERVER,
     POSTGRESQL,
-    HANA
+    HANA,
+    MONGODB
 }

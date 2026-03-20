@@ -11,7 +11,7 @@ const emit = defineEmits<{
   save: [name: string, definition: SyncJobDefinition]
 }>()
 
-const databaseOptions: SourceDatabaseType[] = ['MYSQL', 'ORACLE', 'SQLSERVER', 'POSTGRESQL', 'HANA']
+const databaseOptions: SourceDatabaseType[] = ['MYSQL', 'ORACLE', 'SQLSERVER', 'POSTGRESQL', 'HANA', 'MONGODB']
 const modeOptions: SyncMode[] = ['FULL_ONLY', 'INCREMENTAL_ONLY', 'FULL_AND_INCREMENTAL']
 
 function emptyMapping(): TableMapping {
@@ -86,6 +86,7 @@ watch(
 )
 
 const canEditIncremental = computed(() => state.definition.syncMode !== 'FULL_ONLY')
+const isMongoDb = computed(() => state.definition.source.databaseType === 'MONGODB')
 
 function addMapping() {
   state.definition.tableMappings.push(emptyMapping())
@@ -140,7 +141,7 @@ function submit() {
         <input v-model="state.definition.source.databaseName" />
       </label>
       <label>
-        <span>源端 Schema</span>
+        <span>{{ isMongoDb ? '源端 Schema/Collection 所属库' : '源端 Schema' }}</span>
         <input v-model="state.definition.source.schemaName" />
       </label>
       <label>
@@ -152,8 +153,8 @@ function submit() {
         <input v-model="state.definition.source.password" type="password" />
       </label>
       <label class="wide">
-        <span>源端 JDBC URL</span>
-        <input v-model="state.definition.source.jdbcUrl" />
+        <span>源端连接 URL / JDBC URL</span>
+        <input v-model="state.definition.source.jdbcUrl" :placeholder="isMongoDb ? 'mongodb://user:pass@host:27017/db?authSource=admin' : ''" />
       </label>
       <label class="wide">
         <span>全量导出命令模板</span>
@@ -227,7 +228,23 @@ function submit() {
           </label>
           <label v-if="canEditIncremental">
             <span>增量列</span>
-            <input v-model="mapping.incrementalColumn" placeholder="HANA 建议填写更新时间列" />
+            <input v-model="mapping.incrementalColumn" :placeholder="isMongoDb ? 'MongoDB 可留空，删除事件依赖主键' : 'HANA 建议填写更新时间列'" />
+          </label>
+          <label class="wide">
+            <span>导出字段</span>
+            <input
+              :value="mapping.includedColumns.join(',')"
+              @input="mapping.includedColumns = String(($event.target as HTMLInputElement).value).split(',').map(v => v.trim()).filter(Boolean)"
+              :placeholder="isMongoDb ? '_id,name,address.city,updatedAt' : '可选：限制导出列或控制顺序'"
+            />
+          </label>
+          <label class="wide">
+            <span>字段映射</span>
+            <input
+              :value="Object.entries(mapping.columnMappings).map(([k, v]) => `${k}:${v}`).join(',')"
+              @input="mapping.columnMappings = Object.fromEntries(String(($event.target as HTMLInputElement).value).split(',').map(v => v.trim()).filter(Boolean).map(item => { const [from, to] = item.split(':').map(part => part.trim()); return [from, to ?? from] }))"
+              :placeholder="isMongoDb ? '_id:id,address.city:city' : 'source_col:target_col'"
+            />
           </label>
         </div>
         <button class="ghost danger" @click="removeMapping(index)">删除表映射</button>

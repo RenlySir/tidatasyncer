@@ -1,4 +1,4 @@
-export type SourceDatabaseType = 'MYSQL' | 'ORACLE' | 'SQLSERVER' | 'POSTGRESQL' | 'HANA'
+export type SourceDatabaseType = 'MYSQL' | 'ORACLE' | 'SQLSERVER' | 'POSTGRESQL' | 'HANA' | 'MONGODB'
 export type SyncMode = 'FULL_ONLY' | 'INCREMENTAL_ONLY' | 'FULL_AND_INCREMENTAL'
 
 export interface TableMapping {
