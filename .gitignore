@@ -18,3 +18,4 @@ vendor/tools/
 *.log
 .tmp/
 sync-admin-server/logs/
+.run/
