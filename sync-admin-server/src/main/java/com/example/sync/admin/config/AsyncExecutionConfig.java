@@ -16,6 +16,9 @@ public class AsyncExecutionConfig {
         executor.setMaxPoolSize(8);
         executor.setQueueCapacity(64);
         executor.setThreadNamePrefix("sync-job-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
     }

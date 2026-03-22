@@ -52,6 +52,19 @@ public class SyncJobEntity {
 
     private Long lastLagMillis;
 
+    private Integer exportedTableCount;
+
+    private Integer totalTableCount;
+
+    private Long exportedBytes;
+
+    private Integer importedTableCount;
+
+    private Long importedBytes;
+
+    @Column(length = 1000)
+    private String latestLogPosition;
+
     private String latestCatalog;
 
     private String latestSchema;
@@ -158,6 +171,54 @@ public class SyncJobEntity {
 
     public void setLastLagMillis(Long lastLagMillis) {
         this.lastLagMillis = lastLagMillis;
+    }
+
+    public Integer getExportedTableCount() {
+        return exportedTableCount;
+    }
+
+    public void setExportedTableCount(Integer exportedTableCount) {
+        this.exportedTableCount = exportedTableCount;
+    }
+
+    public Integer getTotalTableCount() {
+        return totalTableCount;
+    }
+
+    public void setTotalTableCount(Integer totalTableCount) {
+        this.totalTableCount = totalTableCount;
+    }
+
+    public Long getExportedBytes() {
+        return exportedBytes;
+    }
+
+    public void setExportedBytes(Long exportedBytes) {
+        this.exportedBytes = exportedBytes;
+    }
+
+    public Integer getImportedTableCount() {
+        return importedTableCount;
+    }
+
+    public void setImportedTableCount(Integer importedTableCount) {
+        this.importedTableCount = importedTableCount;
+    }
+
+    public Long getImportedBytes() {
+        return importedBytes;
+    }
+
+    public void setImportedBytes(Long importedBytes) {
+        this.importedBytes = importedBytes;
+    }
+
+    public String getLatestLogPosition() {
+        return latestLogPosition;
+    }
+
+    public void setLatestLogPosition(String latestLogPosition) {
+        this.latestLogPosition = latestLogPosition;
     }
 
     public String getLatestCatalog() {

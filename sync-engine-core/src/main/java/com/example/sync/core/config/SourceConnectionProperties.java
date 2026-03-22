@@ -11,6 +11,7 @@ public record SourceConnectionProperties(
         String username,
         String password,
         String jdbcUrl,
+        String jdbcParameters,
         String commandTemplate
 ) {
 }

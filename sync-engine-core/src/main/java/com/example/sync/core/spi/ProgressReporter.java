@@ -11,6 +11,15 @@ public interface ProgressReporter {
 
     void updateLatestEvent(StandardChangeEvent event);
 
+    default void updateFullLoadMetrics(int exportedTableCount, int totalTableCount, long exportedBytes, String message) {
+    }
+
+    default void updateImportMetrics(int importedTableCount, int totalTableCount, long importedBytes, String message) {
+    }
+
+    default void updateLogPosition(String logPosition, String message) {
+    }
+
     void log(String level, String message);
 
     boolean isStopRequested();

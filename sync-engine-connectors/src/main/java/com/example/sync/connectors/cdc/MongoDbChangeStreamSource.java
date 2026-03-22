@@ -76,6 +76,9 @@ public class MongoDbChangeStreamSource implements ChangeEventSource {
                         }
                         StandardChangeEvent event = mapEvent(definition, change);
                         reporter.updateLag(calculateLag(change.getClusterTime()), "MongoDB CDC lag updated");
+                        if (change.getResumeToken() != null) {
+                            reporter.updateLogPosition(change.getResumeToken().toBsonDocument().toJson(), "MongoDB resume token updated");
+                        }
                         reporter.updateLatestEvent(event);
                         sink.accept(event);
                     }
@@ -95,7 +98,7 @@ public class MongoDbChangeStreamSource implements ChangeEventSource {
     private StandardChangeEvent mapEvent(SyncJobDefinition definition, ChangeStreamDocument<Document> change) {
         TableMapping mapping = resolveMapping(definition, change);
         Document fullDocument = change.getFullDocument();
-        Document keyDocument = change.getDocumentKey();
+        Document keyDocument = change.getDocumentKey() == null ? null : Document.parse(change.getDocumentKey().toJson());
         Map<String, Object> keys = MongoDocumentMapper.toFlatMap(keyDocument, mapping == null ? List.of() : mapping.primaryKeys());
         Map<String, Object> after = switch (change.getOperationType()) {
             case INSERT, UPDATE, REPLACE -> MongoDocumentMapper.toFlatMap(

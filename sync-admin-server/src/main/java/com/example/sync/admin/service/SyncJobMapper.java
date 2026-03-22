@@ -32,9 +32,11 @@ public class SyncJobMapper {
     }
 
     public SyncJobResponse toResponse(SyncJobEntity entity) {
+        SyncJobDefinition definition = toDefinition(entity);
         return new SyncJobResponse(
                 entity.getId(),
                 entity.getName(),
+                definition.source().databaseType(),
                 entity.getSyncMode(),
                 entity.getStatus(),
                 entity.getPhase(),
@@ -42,6 +44,12 @@ public class SyncJobMapper {
                 entity.getLastMessage(),
                 entity.getLastError(),
                 entity.getLastLagMillis(),
+                entity.getExportedTableCount(),
+                entity.getTotalTableCount(),
+                entity.getExportedBytes(),
+                entity.getImportedTableCount(),
+                entity.getImportedBytes(),
+                entity.getLatestLogPosition(),
                 entity.getLatestCatalog(),
                 entity.getLatestSchema(),
                 entity.getLatestTable(),

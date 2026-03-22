@@ -9,6 +9,7 @@ import com.example.sync.core.config.SourceConnectionProperties;
 import com.example.sync.core.config.SyncJobDefinition;
 import com.example.sync.core.config.TableMapping;
 import com.example.sync.core.config.TargetConnectionProperties;
+import com.example.sync.core.model.DeploymentArchitecture;
 import com.example.sync.core.model.JobPhase;
 import com.example.sync.core.model.SourceDatabaseType;
 import com.example.sync.core.model.SyncMode;
@@ -25,15 +26,17 @@ public final class SyncJobFixtures {
                 1L,
                 "mysql-to-tidb",
                 SyncMode.FULL_AND_INCREMENTAL,
+                DeploymentArchitecture.AMD64,
                 new SourceConnectionProperties(
                         SourceDatabaseType.MYSQL,
                         "127.0.0.1",
                         3306,
                         "source_db",
-                        "public",
+                        "source_db",
                         "root",
                         "root",
                         "jdbc:mysql://127.0.0.1:3306/source_db",
+                        "",
                         "echo export > ${file}"
                 ),
                 new TargetConnectionProperties(
@@ -43,11 +46,12 @@ public final class SyncJobFixtures {
                         "root",
                         "root",
                         "jdbc:mysql://127.0.0.1:4000/target_db",
+                        "",
                         "tidb-lightning"
                 ),
                 List.of(new TableMapping(
                         "source_db",
-                        "public",
+                        "source_db",
                         "orders",
                         "target_db",
                         "orders",
@@ -57,7 +61,7 @@ public final class SyncJobFixtures {
                         Map.of("status", "order_status")
                 )),
                 new FullLoadConfig(
-                        "mysqldump",
+                        "dumpling",
                         "./work/export",
                         1000,
                         1,
@@ -70,7 +74,7 @@ public final class SyncJobFixtures {
                         "./work/offsets/offset.dat",
                         5,
                         500,
-                        Map.of("snapshot.mode", "initial")
+                        Map.of("mysqlSnapshotMode", "no_data")
                 )
         );
     }
@@ -88,6 +92,11 @@ public final class SyncJobFixtures {
         entity.setPhase(JobPhase.CREATED);
         entity.setDefinitionJson(definitionJson);
         entity.setProgressPercent(0);
+        entity.setExportedTableCount(0);
+        entity.setTotalTableCount(1);
+        entity.setImportedTableCount(0);
+        entity.setExportedBytes(0L);
+        entity.setImportedBytes(0L);
         return entity;
     }
 }

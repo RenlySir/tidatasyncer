@@ -2,6 +2,7 @@ package com.example.sync.connectors.util;
 
 import com.example.sync.core.spi.ChangeCaptureHandle;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,15 @@ public class SimpleChangeCaptureHandle implements ChangeCaptureHandle {
     @Override
     public void awaitStop() throws InterruptedException {
         stopLatch.await();
+        if (future.isCancelled()) {
+            return;
+        }
+        try {
+            future.get(100, TimeUnit.MILLISECONDS);
+        } catch (ExecutionException ex) {
+            throw new IllegalStateException("Change capture stopped with error", ex.getCause());
+        } catch (java.util.concurrent.TimeoutException ignored) {
+        }
     }
 
     @Override

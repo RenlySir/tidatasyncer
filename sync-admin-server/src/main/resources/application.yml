@@ -1,4 +1,10 @@
 spring:
+  application:
+    name: sync-admin-server
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
   datasource:
     url: jdbc:h2:file:./data/sync-admin;MODE=MySQL;AUTO_SERVER=TRUE
     username: sa
@@ -16,10 +22,17 @@ spring:
       write-dates-as-timestamps: false
 
 management:
+  health:
+    mongo:
+      enabled: false
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,loggers,logfile
+
+logging:
+  file:
+    path: ./logs
 
 server:
   port: 8080

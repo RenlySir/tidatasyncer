@@ -17,6 +17,7 @@ import com.example.sync.admin.service.SyncJobRuntimeManager;
 import com.example.sync.admin.service.SyncJobService;
 import com.example.sync.admin.support.SyncJobFixtures;
 import com.example.sync.core.model.JobPhase;
+import com.example.sync.core.model.SourceDatabaseType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,10 +48,17 @@ class SyncJobControllerTest {
         SyncJobResponse response = new SyncJobResponse(
                 1L,
                 "mysql-to-tidb",
+                SourceDatabaseType.MYSQL,
                 SyncJobFixtures.jobDefinition().syncMode(),
                 SyncJobStatus.DRAFT,
                 JobPhase.CREATED,
                 0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -82,6 +90,7 @@ class SyncJobControllerTest {
         mockMvc.perform(get("/api/jobs/1/definition"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.jobId").value(1))
+                .andExpect(jsonPath("$.definition.deploymentArchitecture").value("AMD64"))
                 .andExpect(jsonPath("$.definition.source.databaseType").value("MYSQL"))
                 .andExpect(jsonPath("$.definition.tableMappings[0].targetTable").value("orders"));
     }
@@ -91,10 +100,17 @@ class SyncJobControllerTest {
         SyncJobResponse response = new SyncJobResponse(
                 1L,
                 "mysql-to-tidb",
+                SourceDatabaseType.MYSQL,
                 SyncJobFixtures.jobDefinition().syncMode(),
                 SyncJobStatus.DRAFT,
                 JobPhase.CREATED,
                 0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,

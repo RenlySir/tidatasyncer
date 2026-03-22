@@ -14,7 +14,17 @@ public class HanaCsvExporter extends AbstractCommandBasedExporter {
 
     @Override
     protected String defaultCommandTemplate(SyncJobDefinition definition) {
-        return "hdbsql -n ${host}:${port} -u ${username} -p '${password}' "
-                + "\"select * from \\\"${schema}\\\".\\\"${table}\\\"\" -o ${file}";
+        return "${exportToolBinary} -n ${host}:${port} -u ${username} -p '${password}' "
+                + "\"select ${hanaSelectList} from ${hanaTable}\" -o '${file}'";
+    }
+
+    @Override
+    protected String defaultExportBinary() {
+        return "hdbsql";
+    }
+
+    @Override
+    protected boolean exportProducesHeader(SyncJobDefinition definition) {
+        return false;
     }
 }

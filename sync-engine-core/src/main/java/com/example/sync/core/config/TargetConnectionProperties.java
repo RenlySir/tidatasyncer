@@ -7,6 +7,21 @@ public record TargetConnectionProperties(
         String username,
         String password,
         String jdbcUrl,
-        String lightningBinary
+        String jdbcParameters,
+        String lightningBinary,
+        Integer statusPort
 ) {
+
+    public TargetConnectionProperties(
+            String host,
+            Integer port,
+            String databaseName,
+            String username,
+            String password,
+            String jdbcUrl,
+            String jdbcParameters,
+            String lightningBinary
+    ) {
+        this(host, port, databaseName, username, password, jdbcUrl, jdbcParameters, lightningBinary, 10080);
+    }
 }

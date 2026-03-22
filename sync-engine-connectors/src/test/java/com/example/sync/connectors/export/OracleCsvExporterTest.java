@@ -2,6 +2,7 @@ package com.example.sync.connectors.export;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.example.sync.core.config.FullLoadConfig;
 import com.example.sync.core.config.IncrementalConfig;
@@ -9,6 +10,7 @@ import com.example.sync.core.config.SourceConnectionProperties;
 import com.example.sync.core.config.SyncJobDefinition;
 import com.example.sync.core.config.TableMapping;
 import com.example.sync.core.config.TargetConnectionProperties;
+import com.example.sync.core.model.DeploymentArchitecture;
 import com.example.sync.core.model.SourceDatabaseType;
 import com.example.sync.core.model.SyncMode;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +46,7 @@ class OracleCsvExporterTest {
         List<Path> files = exporter.prepareLightningFiles(jobDefinition(), mapping, rawFile, tempDir);
 
         assertEquals(1, files.size());
-        assertEquals("target_db.orders.csv", files.get(0).getFileName().toString());
+        assertEquals("target_db.orders.00000001.csv", files.get(0).getFileName().toString());
         assertTrue(Files.exists(files.get(0)));
     }
 
@@ -54,16 +56,46 @@ class OracleCsvExporterTest {
 
         String command = exporter.defaultCommandTemplate(jobDefinition());
 
-        assertTrue(command.startsWith("sqluldr2 "));
+        assertTrue(command.startsWith("${exportToolBinary}"));
         assertTrue(command.contains("text=CSV"));
         assertTrue(command.contains("head=yes"));
     }
 
+    @Test
+    void shouldInjectFlashbackScnIntoOracleQuery() throws Exception {
+        TestOracleCsvExporter exporter = new TestOracleCsvExporter();
+
+        exporter.captureTemplateValues(jobDefinitionWithOracleScn("123456"), jobDefinition().tableMappings().get(0), tempDir.resolve("sample.csv"));
+
+        assertEquals(" AS OF SCN 123456", exporter.oracleFlashbackClause);
+    }
+
+    @Test
+    void shouldAppendSnapshotTooOldGuidance() {
+        OracleCsvExporter exporter = new OracleCsvExporter();
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            throw new IllegalStateException(exporter.buildFailureMessage(
+                    jobDefinition(),
+                    jobDefinition().tableMappings().get(0),
+                    "ORA-01555 snapshot too old"
+            ));
+        });
+
+        assertTrue(ex.getMessage().contains("ORA-01555"));
+        assertTrue(ex.getMessage().contains("UNDO_RETENTION"));
+    }
+
     private SyncJobDefinition jobDefinition() {
+        return jobDefinitionWithOracleScn(null);
+    }
+
+    private SyncJobDefinition jobDefinitionWithOracleScn(String scn) {
         return new SyncJobDefinition(
                 1L,
                 "oracle-to-tidb",
                 SyncMode.FULL_ONLY,
+                DeploymentArchitecture.AMD64,
                 new SourceConnectionProperties(
                         SourceDatabaseType.ORACLE,
                         "127.0.0.1",
@@ -73,6 +105,7 @@ class OracleCsvExporterTest {
                         "system",
                         "oracle",
                         "jdbc:oracle:thin:@//127.0.0.1:1521/orclpdb",
+                        "",
                         null
                 ),
                 new TargetConnectionProperties(
@@ -82,6 +115,7 @@ class OracleCsvExporterTest {
                         "root",
                         "root",
                         "jdbc:mysql://127.0.0.1:4000/target_db",
+                        "",
                         "tidb-lightning"
                 ),
                 List.of(new TableMapping(
@@ -109,8 +143,18 @@ class OracleCsvExporterTest {
                         "./work/offsets/offset.dat",
                         5,
                         500,
-                        Map.of()
+                        scn == null ? Map.of() : Map.of("oracleStartScn", scn)
                 )
         );
+    }
+
+    private static final class TestOracleCsvExporter extends OracleCsvExporter {
+        private String oracleFlashbackClause;
+
+        private void captureTemplateValues(SyncJobDefinition definition, TableMapping mapping, Path csvFile) throws Exception {
+            java.util.Map<String, String> values = new java.util.HashMap<>();
+            enrichTemplateValues(definition, mapping, values);
+            oracleFlashbackClause = values.get("oracleFlashbackClause");
+        }
     }
 }

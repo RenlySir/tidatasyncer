@@ -8,8 +8,12 @@ import com.example.sync.core.model.JobPhase;
 import com.example.sync.core.runtime.StandardChangeEvent;
 import com.example.sync.core.spi.ProgressReporter;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobProgressReporterImpl implements ProgressReporter {
+
+    private static final Logger log = LoggerFactory.getLogger(JobProgressReporterImpl.class);
 
     private final Long jobId;
     private final SyncJobRepository jobRepository;
@@ -57,12 +61,41 @@ public class JobProgressReporterImpl implements ProgressReporter {
     }
 
     @Override
+    public void updateFullLoadMetrics(int exportedTableCount, int totalTableCount, long exportedBytes, String message) {
+        SyncJobEntity entity = getJob();
+        entity.setExportedTableCount(exportedTableCount);
+        entity.setTotalTableCount(totalTableCount);
+        entity.setExportedBytes(exportedBytes);
+        entity.setLastMessage(message);
+        jobRepository.save(entity);
+    }
+
+    @Override
+    public void updateImportMetrics(int importedTableCount, int totalTableCount, long importedBytes, String message) {
+        SyncJobEntity entity = getJob();
+        entity.setImportedTableCount(importedTableCount);
+        entity.setTotalTableCount(totalTableCount);
+        entity.setImportedBytes(importedBytes);
+        entity.setLastMessage(message);
+        jobRepository.save(entity);
+    }
+
+    @Override
+    public void updateLogPosition(String logPosition, String message) {
+        SyncJobEntity entity = getJob();
+        entity.setLatestLogPosition(logPosition);
+        entity.setLastMessage(message);
+        jobRepository.save(entity);
+    }
+
+    @Override
     public void log(String level, String message) {
         SyncJobLogEntity logEntity = new SyncJobLogEntity();
         logEntity.setJobId(jobId);
         logEntity.setLevel(level);
         logEntity.setMessage(message);
         logRepository.save(logEntity);
+        logToApplicationLogger(level, message);
     }
 
     @Override
@@ -73,5 +106,22 @@ public class JobProgressReporterImpl implements ProgressReporter {
     private SyncJobEntity getJob() {
         return jobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Job not found: " + jobId));
+    }
+
+    private void logToApplicationLogger(String level, String message) {
+        String formatted = "[jobId={}] {}";
+        if ("ERROR".equalsIgnoreCase(level)) {
+            log.error(formatted, jobId, message);
+            return;
+        }
+        if ("WARN".equalsIgnoreCase(level)) {
+            log.warn(formatted, jobId, message);
+            return;
+        }
+        if ("DEBUG".equalsIgnoreCase(level)) {
+            log.debug(formatted, jobId, message);
+            return;
+        }
+        log.info(formatted, jobId, message);
     }
 }

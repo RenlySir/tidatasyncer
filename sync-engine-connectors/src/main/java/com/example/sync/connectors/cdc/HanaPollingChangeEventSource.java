@@ -1,6 +1,7 @@
 package com.example.sync.connectors.cdc;
 
 import com.example.sync.connectors.util.SimpleChangeCaptureHandle;
+import com.example.sync.connectors.util.JdbcConnectionSupport;
 import com.example.sync.core.config.SyncJobDefinition;
 import com.example.sync.core.config.TableMapping;
 import com.example.sync.core.model.ChangeOperation;
@@ -44,7 +45,7 @@ public class HanaPollingChangeEventSource implements ChangeEventSource {
             Map<String, Object> offsets = new HashMap<>();
 
             try (Connection connection = DriverManager.getConnection(
-                    definition.source().jdbcUrl(),
+                    JdbcConnectionSupport.resolveSourceJdbcUrl(definition.source()),
                     definition.source().username(),
                     definition.source().password()
             )) {
@@ -99,6 +100,7 @@ public class HanaPollingChangeEventSource implements ChangeEventSource {
                     }
                     if (column.equalsIgnoreCase(watermarkColumn)) {
                         offsets.put(offsetKey, value);
+                        reporter.updateLogPosition(offsetKey + ":" + value, "HANA incremental watermark updated");
                     }
                 }
                 StandardChangeEvent event = new StandardChangeEvent(

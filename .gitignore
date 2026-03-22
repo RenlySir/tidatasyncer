@@ -13,4 +13,8 @@ sync-ui/dist/
 
 data/
 work/
+vendor/downloads/
+vendor/tools/
 *.log
+.tmp/
+sync-admin-server/logs/

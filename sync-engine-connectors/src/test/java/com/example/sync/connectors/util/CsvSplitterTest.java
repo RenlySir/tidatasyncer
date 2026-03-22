@@ -23,7 +23,7 @@ class CsvSplitterTest {
         List<Path> files = CsvSplitter.splitForLightning(sourceFile, tempDir, "target_db", "orders", 1024 * 1024);
 
         assertEquals(1, files.size());
-        assertEquals("target_db.orders.csv", files.get(0).getFileName().toString());
+        assertEquals("target_db.orders.00000001.csv", files.get(0).getFileName().toString());
         assertTrue(Files.exists(files.get(0)));
     }
 
@@ -39,8 +39,8 @@ class CsvSplitterTest {
         List<Path> files = CsvSplitter.splitForLightning(sourceFile, tempDir, "target_db", "orders", 64);
 
         assertTrue(files.size() > 1);
-        assertEquals("target_db.orders.001.csv", files.get(0).getFileName().toString());
-        assertEquals("target_db.orders.002.csv", files.get(1).getFileName().toString());
+        assertEquals("target_db.orders.00000001.csv", files.get(0).getFileName().toString());
+        assertEquals("target_db.orders.00000002.csv", files.get(1).getFileName().toString());
         for (Path file : files) {
             List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
             assertEquals("id,name", lines.get(0));

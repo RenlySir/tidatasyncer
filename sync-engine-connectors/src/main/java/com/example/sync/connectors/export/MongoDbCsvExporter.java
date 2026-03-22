@@ -22,13 +22,17 @@ public class MongoDbCsvExporter extends AbstractCommandBasedExporter {
 
     @Override
     protected String defaultCommandTemplate(SyncJobDefinition definition) {
-        String binary = resolveExportBinary(definition, "mongoexport");
-        return binary
+        return "${exportToolBinary}"
                 + " --uri='${connectionUri}'"
                 + " --db='${database}'"
                 + " --collection='${table}'"
                 + " --type=csv"
                 + " --fieldFile='${fieldFile}'"
                 + " --out='${file}'";
+    }
+
+    @Override
+    protected String defaultExportBinary() {
+        return "mongoexport";
     }
 }

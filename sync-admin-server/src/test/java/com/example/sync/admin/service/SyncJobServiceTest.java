@@ -7,6 +7,7 @@ import com.example.sync.admin.dto.SyncJobResponse;
 import com.example.sync.admin.repository.SyncJobLogRepository;
 import com.example.sync.admin.repository.SyncJobRepository;
 import com.example.sync.admin.support.SyncJobFixtures;
+import com.example.sync.core.model.DeploymentArchitecture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ class SyncJobServiceTest {
         assertThat(definitionResponse.jobId()).isEqualTo(created.id());
         assertThat(definitionResponse.jobName()).isEqualTo("mysql-to-tidb");
         assertThat(definitionResponse.definition().source().databaseType().name()).isEqualTo("MYSQL");
+        assertThat(definitionResponse.definition().deploymentArchitecture()).isEqualTo(DeploymentArchitecture.AMD64);
         assertThat(definitionResponse.definition().tableMappings()).singleElement()
                 .extracting(mapping -> mapping.targetTable())
                 .isEqualTo("orders");
